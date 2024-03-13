@@ -1,0 +1,61 @@
+@font-face {
+    font-family: Orbitron-Bold;
+    src: url(../assets/Fonts/Orbitron-Bold.ttf);
+}
+
+*{
+    min-width: 0%;
+    font-family: Orbitron-Bold, sans-serif;
+}
+.textStroke{
+    -webkit-text-stroke-color: black;
+    -webkit-text-stroke-width: 1px;
+}
+
+.favoriteSpacing{
+    font-size: 1.7rem;
+    margin-bottom: 1.25rem;
+}
+
+.cursorImg{
+    cursor: url("../assets/5b90fef1-b798-4578-94e0-13beb675f8a9.png"), auto;
+}
+
+.modalBox {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modalText {
+    background-color: #fefefe;
+    font-family: Orbitron-Bold;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 10px;
+  }
+  
+  .greenBtn {
+    margin: 5px;
+    padding: 5px;
+    background-color: green;
+    border-radius: 10px;
+  }
+  .redBtn {
+    margin: 5px;
+    padding: 5px;
+    background-color: red;
+    border-radius: 10px;
+  }
+  
+ 
