@@ -8,6 +8,7 @@ import pokeImg from '../assets/PokedexPikaChuPh.png'
 import { Evolution, Pokemon } from '../../Interfaces/Interfaces'
 import { getAPI, pokeData, pokeDataEvo } from '../../DataServices/Service'
 import './PokedexPageComponent.css';
+import { Agent } from 'http'
 
 const PokedexPageComponent = () => {
     const [pokemon, setPokemon] = useState<Pokemon | null>(null);
@@ -40,6 +41,12 @@ const PokedexPageComponent = () => {
     const handleShinyClick = () => {
 
     }
+    const genRandomNumber = () =>{
+        const randomId: string = String(Math.floor(Math.random() * 898) + 1);
+        setUserInput(randomId);
+    }
+
+    
     const CapitalFirstLetter = (userInput: string) => {
         let words = userInput.split("-");
         let capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
@@ -57,7 +64,7 @@ const PokedexPageComponent = () => {
                     </p>
 
                     <button id="randomPokemon"
-                        className="hidden lg:block font-[Orbitron-Bold] text-[1.875rem] md:text-[3rem] bg-[#FF1C1C] rounded-[10px] my-5 p-5 text-white">Random
+                        className="hidden lg:block font-[Orbitron-Bold] text-[1.875rem] md:text-[3rem] bg-[#FF1C1C] rounded-[10px] my-5 p-5 text-white" onClick={genRandomNumber}>Random
                     </button>
 
 
@@ -150,7 +157,11 @@ const PokedexPageComponent = () => {
 
                     <input type="text" id="userSearchInput"
                         className="font-[Orbitron-Bold] text-[1.25rem] min-h-[63px]  md:text-[1.875rem] text-black rounded-[10px] w-full mx-[3.5625rem] lg:mx-[6.875rem]"
-                        placeholder="Search Name or ID" onChange={(e) => { setUserInput(e.target.value) }} />
+                        placeholder="Search Name or ID" onKeyDown={(e: React.KeyboardEvent<HTMLInputElement> |  React.ChangeEvent<HTMLInputElement>) => { 
+                                if((e as React.KeyboardEvent<HTMLInputElement>).key === "Enter"){
+                                    setUserInput((e as React.ChangeEvent<HTMLInputElement>).target.value);
+                                }
+                         }} />
                 </div>
                 <div className="flex justify-center items-center mt-[23px]">
                     <img src={pokeballIcon} className="mx-2 h-[50px] w-[50px] md:h-[70px] md:w-[70px]" alt="Pokeball Icon" />
