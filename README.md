@@ -1,3 +1,9 @@
+Name - Tyler Nguyen
+Date - 03-15-2024
+Lab Name - Pokemon Api React Rebuild
+Peer Reviewer -
+Peer Review - 
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
