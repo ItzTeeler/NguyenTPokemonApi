@@ -1,19 +1,3 @@
-// export interface Pokemon { 
-//     id: number,
-//     name: string,
-//     imageUrl: string,
-//     sprites: {
-//         other:{
-//             ["official-artwork"]:{
-//                 front_default: string,
-//                 shiny_default: string
-//             }
-//         }
-//     }
-//     types:{slots: number; type:{name: string}}[],
-//     abilities: {ability: {name: string; url: string}}[],
-//     evolution_chain:{chain:{species:{name:string}; evolves_to: { species: {name:string}[]}[]}};
-// }
 export interface Pokemon {
     abilities:                Ability[];
     base_experience:          number;
@@ -312,7 +296,7 @@ export interface Pokemon {
 export interface RegEvolution {
     baby_trigger_item: null;
     chain:             Chain;
-    id:                number;
+    id:                number;         
    }
    
    export interface Chain {

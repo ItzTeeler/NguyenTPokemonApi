@@ -27,13 +27,6 @@ const PokedexPageComponent = () => {
     
     useEffect(() => {
         const getData = async () => {
-            const favorites = getLocalStorage();
-            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
-            if (isFavorite) {
-                setFavorite(FavHeart);
-            } else {
-                setFavorite(unFavHeart);
-            }
             const pokemonData = await pokeData(userInput);
             const data: Pokemon = pokemonData;
 
@@ -44,18 +37,25 @@ const PokedexPageComponent = () => {
             const evoData: Evolution = evolutionData;
             console.log(evoData.evolution_chain.url);
             const evoTypeData = await getAPI(evoData.evolution_chain.url);
-            const evoType: any | RegEvolution = evoTypeData;
+            const evoType: {evolution_chain:{chain:{species:{name:string}; evolves_to:{species:{name:string}[]}[]}}}| any | RegEvolution = evoTypeData;
             console.log(evoType);
             setPokemonEvolution(evoType);
             setEvoData(evoData);
             setLocation(locData);
             setPokemon(data);
             BackgroundColor(evoData.color.name);
-
+            
+            const favorites = getLocalStorage();
+            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput || String(favPokemon.id) === userInput);
+            if (isFavorite) {
+                setFavorite(FavHeart);
+            } else {
+                setFavorite(unFavHeart);
+            }
             const pokemonEvolutionChain: string[] = [];
             if (evoType && evoType.chain) {
                 pokemonEvolutionChain.push(evoType.chain.species.name);
-                evoType.chain.evolves_to.forEach((e: any) => {
+                evoType.chain.evolves_to.forEach((e: {species:{name:string;}; evolves_to: string[];}) => {
                     e.species && pokemonEvolutionChain.push(e.species.name);
                     e.evolves_to.forEach((e: any) => {
                         e.species && pokemonEvolutionChain.push(e.species.name);
