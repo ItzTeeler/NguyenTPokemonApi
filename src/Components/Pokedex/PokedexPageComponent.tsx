@@ -1,59 +1,247 @@
-import React, { useEffect, useState } from 'react'
-import pichuPic from '../assets/pichuEvo.png'
-import pikachuPic from '../assets/PokedexPikaChuPh.png'
-import raichuPic from '../assets/raichuevo.png'
+import React, { useCallback, useEffect, useState } from 'react'
 import pokeballIcon from '../assets/Pokeballicon.png'
 import unFavHeart from '../assets/Unfav.png'
-import pokeImg from '../assets/PokedexPikaChuPh.png'
-import { Evolution, Pokemon } from '../../Interfaces/Interfaces'
-import { getAPI, pokeData, pokeDataEvo } from '../../DataServices/Service'
+import FavHeart from '../assets/Fav.png'
+import { Evolution, Pokemon, RegEvolution } from '../../Interfaces/Interfaces'
+import { PokemonEvolutionId, PokemonEvolutionImageName, getAPI, pokeData, pokeDataEvo } from '../../DataServices/Service'
 import './PokedexPageComponent.css';
-import { Agent } from 'http'
 
 const PokedexPageComponent = () => {
     const [pokemon, setPokemon] = useState<Pokemon | null>(null);
-    const [userInput, setUserInput] = useState<string>("1");
-    const [location, setLocation] = useState<any>();
+    const [userInput, setUserInput] = useState<string>("pikachu");
+    const [location, setLocation] = useState<Location>();
     const [evoData, setEvoData] = useState<Evolution>();
+    const [imgSrc, setImgSrc] = useState<string>("");
+    const [abilityColor, setAbilityColor] = useState<string>("#F8D030");
+    const [locationColor, setLocationColor] = useState<string>("#F8D030");
+    const [movesColor, setMoveColor] = useState<string>("#F8D030");
+    const [evolutionColor, setEvolutionColor] = useState<string>("#F8D030");
+    const [pokemonColorBack, setPokemonColorBack] = useState<string>("#F8D030");
+    const [pokemonEvolution, setPokemonEvolution] = useState<any>({});
+    const [pokemonEvoData, setPokeEvoData] = useState<any[]>([]);
+    const [evolutionDatas, setEvolutionData] = useState<any[]>([]);
+    const [favorite, setFavorite] = useState<string>(unFavHeart);
     useEffect(() => {
 
         const getData = async () => {
+            const favorites = getLocalStorage();
+            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
+            if (isFavorite) {
+                setFavorite(FavHeart);
+            } else {
+                setFavorite(unFavHeart);
+            }
             const pokemonData = await pokeData(userInput);
             const data: Pokemon = pokemonData;
-            console.log(data);
 
-            const locationData = await getAPI(data?.location_area_encounters);
+            const locationData = await getAPI(data.location_area_encounters);
             const locData: Location = locationData;
 
             const evolutionData = await pokeDataEvo(userInput);
-            const evoData: Evolution = evolutionData
+            const evoData: Evolution = evolutionData;
 
+            const evoTypeData = await getAPI(evoData.evolution_chain.url);
+            const evoType: any | RegEvolution = evoTypeData;
+
+            setPokemonEvolution(evoType);
             setEvoData(evoData);
             setLocation(locData);
             setPokemon(data);
-            console.log(locData)
-            console.log(evoData)
-        }
+            BackgroundColor(evoData.color.name);
+
+            const pokemonEvolutionChain: string[] = [];
+            if (evoType && evoType.chain) {
+                pokemonEvolutionChain.push(evoType.chain.species.name);
+                evoType.chain.evolves_to.forEach((e: any) => {
+                    e.species && pokemonEvolutionChain.push(e.species.name);
+                    e.evolves_to.forEach((e: any) => {
+                        e.species && pokemonEvolutionChain.push(e.species.name);
+                    });
+                });
+            }
+            setPokeEvoData(pokemonEvolutionChain);
+            console.log(pokemonEvolutionChain);
+        };
 
         getData();
+
     }, [userInput]);
 
-    const handleShinyClick = () => {
+    const fetchEvolutionData = useCallback(async () => {
+        const promise = pokemonEvoData.map(async (evolutionName: any) => {
+            const evolutionImage = await PokemonEvolutionImageName(evolutionName);
+            const evolutionId = await PokemonEvolutionId(evolutionName);
+            return { evolutionImage, evolutionId };
+        });
+        const dataEvo = await Promise.all(promise);
 
-    }
-    const genRandomNumber = () =>{
+        setEvolutionData(dataEvo);
+    }, [pokemonEvoData]);
+
+    useEffect(() => {
+        fetchEvolutionData();
+    }, [fetchEvolutionData]);
+
+    const handleShinyClick = () => {
+        const shinyPic = pokemon?.sprites.other?.['official-artwork'].front_shiny;
+        const defaultPic = pokemon?.sprites.other?.['official-artwork'].front_default;
+
+        if (shinyPic && imgSrc !== shinyPic) {
+            setImgSrc(shinyPic);
+        } else if (defaultPic && imgSrc !== defaultPic) {
+            setImgSrc(defaultPic);
+        }
+    };
+
+
+    const genRandomNumber = () => {
         const randomId: string = String(Math.floor(Math.random() * 898) + 1);
         setUserInput(randomId);
+        setImgSrc("");
     }
 
-    
+
     const CapitalFirstLetter = (userInput: string) => {
+        if (!userInput) return "";
+
         let words = userInput.split("-");
         let capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
         let formattedInput = capitalizedWords.join(" ");
 
         return formattedInput;
     }
+
+    const BackgroundColor = (color: string) => {
+        switch (color) {
+            case "yellow":
+                setPokemonColorBack("#F8D030");
+                setAbilityColor("#F8D030");
+                setLocationColor("#F8D030");
+                setMoveColor("#F8D030");
+                setEvolutionColor("#F8D030");
+                break;
+            case "black":
+                setPokemonColorBack("#705848");
+                setAbilityColor("#705848");
+                setLocationColor("#705848");
+                setMoveColor("#705848");
+                setEvolutionColor("#705848");
+                break;
+            case "brown":
+                setPokemonColorBack("#A7A879");
+                setAbilityColor("#A7A879");
+                setLocationColor("#A7A879");
+                setMoveColor("#A7A879");
+                setEvolutionColor("#A7A879");
+                break;
+            case "gray":
+                setPokemonColorBack("#B8B8D0");
+                setAbilityColor("#B8B8D0");
+                setLocationColor("#B8B8D0");
+                setMoveColor("#B8B8D0");
+                setEvolutionColor("#B8B8D0");
+                break;
+            case "green":
+                setPokemonColorBack("#78C850");
+                setAbilityColor("#78C850");
+                setLocationColor("#78C850");
+                setMoveColor("#78C850");
+                setEvolutionColor("#78C850");
+                break;
+            case "pink":
+                setPokemonColorBack("#F85889");
+                setAbilityColor("#F85889");
+                setLocationColor("#F85889");
+                setMoveColor("#F85889");
+                setEvolutionColor("#F85889");
+                break;
+            case "purple":
+                setPokemonColorBack("#A890F0");
+                setAbilityColor("#A890F0");
+                setLocationColor("#A890F0");
+                setMoveColor("#A890F0");
+                setEvolutionColor("#A890F0");
+                break;
+            case "red":
+                setPokemonColorBack("#F08030");
+                setAbilityColor("#F08030");
+                setLocationColor("#F08030");
+                setMoveColor("#F08030");
+                setEvolutionColor("#F08030");
+
+                break;
+            case "white":
+                setPokemonColorBack("#705998");
+                setAbilityColor("#705998");
+                setLocationColor("#705998");
+                setMoveColor("#705998");
+                setEvolutionColor("#705998");
+                break;
+            case "blue":
+                setPokemonColorBack("#6890F0");
+                setAbilityColor("#6890F0");
+                setLocationColor("#6890F0");
+                setMoveColor("#6890F0");
+                setEvolutionColor("#6890F0");
+                break;
+            default:
+                setPokemonColorBack("#F8D030");
+                setAbilityColor("#F8D030");
+                setLocationColor("#F8D030");
+                setMoveColor("#F8D030");
+                setEvolutionColor("#F8D030");
+        }
+    }
+
+    const getLocalStorage = () => {
+
+        let localStorageData = localStorage.getItem("Favorites");
+
+        if (localStorageData == null) {
+            return [];
+        }
+
+        return JSON.parse(localStorageData);
+    }
+
+    // Inside PokedexPageComponent component
+    const handleFavoriteClick = () => {
+        const pokemonName = pokemon?.name;
+        if (pokemonName) {
+            const favorites = getLocalStorage();
+            const isAlreadyFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === pokemonName);
+            if (isAlreadyFavorite) {
+                setFavorite(unFavHeart)
+                removeLocalStorage(pokemon);
+            } else {
+                setFavorite(FavHeart)
+                saveToLocalStorage(pokemon);
+            }
+        }
+    };
+
+
+    const saveToLocalStorage = (pokemon: Pokemon | null) => {
+        let favorites = getLocalStorage();
+        if (pokemon && !favorites.includes(pokemon)) {
+            favorites.push(pokemon);
+            localStorage.setItem("Favorites", JSON.stringify(favorites));
+        }
+    };
+
+    const removeLocalStorage = (pokemon: Pokemon | null) => {
+        let favorites = getLocalStorage();
+        if (pokemon) {
+            const pokemonName = pokemon.name;
+            const namedIndex = favorites.findIndex((favPokemon: Pokemon) => favPokemon.name === pokemonName);
+            if (namedIndex !== -1) {
+                favorites.splice(namedIndex, 1);
+                localStorage.setItem("Favorites", JSON.stringify(favorites));
+            }
+        }
+    };
+
+
     return (
         <div className=" grid grid-cols-12">
             <div className=" col-span-12 lg:col-span-7 order-2 lg:order-1 bg-[#616161] drop-shadow-lg max-h-full pt-[3.125rem]">
@@ -71,9 +259,9 @@ const PokedexPageComponent = () => {
                 </div>
                 <div className="mx-[82px]">
                     <p className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] mb-[50px]">
-                        <span id="abilityColor" className="textStroke text-[#F8D030]">Abilities : </span>
+                        <span id="abilityColor" className="textStroke" style={{ color: abilityColor }}>Abilities : </span>
                         <span id="abilitiesText" className="text-white">
-                            {pokemon?.abilities.map((ability: any, index: number) => (
+                            {pokemon?.abilities.map((ability: { ability: { name: string } }, index: number) => (
                                 <span key={index}>
                                     {CapitalFirstLetter(`${ability.ability.name}`)}
                                     {index !== pokemon.abilities.length - 1 && ', '}
@@ -83,9 +271,9 @@ const PokedexPageComponent = () => {
                     </p>
                     <p
                         className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] overflow-y-scroll max-h-[200px] mb-[50px]">
-                        <span id="abilityColor" className="textStroke text-[#F8D030]">Moves : </span>
+                        <span id="abilityColor" className="textStroke" style={{ color: movesColor }}>Moves : </span>
                         <span id="movesText" className="text-white">
-                            {pokemon?.moves.map((move: any, index: number) => (
+                            {pokemon?.moves.map((move: { move: { name: string } }, index: number) => (
                                 <span key={index}>
                                     {CapitalFirstLetter(`${move.move.name}`)}
                                     {index !== pokemon.moves.length - 1 && ', '}
@@ -93,52 +281,47 @@ const PokedexPageComponent = () => {
                             ))}
                         </span>
                     </p>
-                    <p className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] overflow-y-scroll max-h-[200px] mb-[50px]"><span id="locationColor"
-                        className="textStroke text-[#F8D030]">Location : </span>
+                    <p className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] overflow-y-scroll max-h-[130px] mb-[50px]"><span id="locationColor"
+                        className="textStroke" style={{ color: locationColor }}>Location : </span>
                         <span className="text-white" id="locationText">
-                            {location && location.length > 0 ? location.map((locationItem: any, index: number) => (
-                                <span key={index}>
-                                    {CapitalFirstLetter(`${locationItem.location_area.name}`)}
-                                    {index !== location.length - 1 && ', '}
-                                </span>
-                            )): "N/A"}
+                            {location && Array.isArray(location) && location.length > 0 ?
+                                location.map((locationItem: { location_area: { name: string } }, index: number) => (
+                                    <span key={index}>
+                                        {CapitalFirstLetter(`${locationItem.location_area.name}`)}
+                                        {index !== location.length - 1 && ', '}
+                                    </span>
+                                ))
+                                : "N/A"
+                            }
                         </span>
                     </p>
                 </div>
                 <div className="px-[82px]">
                     <p id="evolutionColors"
-                        className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] textStroke text-[#F8D030] mb-[32px]">
+                        className="font-[Orbitron-Bold] text-[1.875rem] md:text-[2.5rem] textStroke mb-[32px]" style={{ color: evolutionColor }}>
                         Evolutions :</p>
                     <div className="overflow-y-scroll max-w-[923px] max-h-[874px] lg:max-h-[320px] mx-auto">
+
                         <div className="grid grid-cols-3 justify-evenly" id="evolutionDiv">
-                            <div className="col-span-3 lg:col-span-1 grid justify-center mb-[30px]">
-                                <img src={pichuPic} alt="Pichu Picture"
-                                    className="rounded-[200px] border-white border-[5px] w-[200px] h-[200px] drop-shadow-lg" />
-                                <div className="flex contents-center lg:flex-row">
-
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-white">Pichu</p>
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-[#A4ACAF]">#172</p>
+                            {evolutionDatas.map(({ evolutionImage, evolutionId }, index) => (
+                                <div key={index} className="col-span-3 lg:col-span-1 grid justify-center mb-[30px]">
+                                    <img
+                                        src={`${evolutionImage}`}
+                                        className="rounded-[200px] border-white border-[5px] w-[200px] h-[200px] drop-shadow-lg cursorImg"
+                                        onClick={() => {
+                                            setUserInput(pokemonEvoData[index]);
+                                            setImgSrc("");
+                                        }}
+                                        alt={pokemonEvoData[index]}
+                                    />
+                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-white">
+                                        {CapitalFirstLetter(pokemonEvoData[index])}
+                                    </p>
+                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-[#A4ACAF]">#{evolutionId}</p>
                                 </div>
-                            </div>
-                            <div className="col-span-3 lg:col-span-1 grid justify-center mb-[30px]">
-                                <img src={pikachuPic} alt="Pikachu Picture"
-                                    className="rounded-[200px] border-white border-[5px] w-[200px] h-[200px] drop-shadow-lg" />
-                                <div className="flex contents-center lg:flex-row">
-
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-white">Pikachu</p>
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-[#A4ACAF]">#25</p>
-                                </div>
-                            </div>
-                            <div className="col-span-3 lg:col-span-1 grid justify-center mb-[30px]">
-                                <img src={raichuPic} alt="Raichu Picture"
-                                    className="rounded-[200px] border-white border-[5px] w-[200px] h-[200px] drop-shadow-lg" />
-
-                                <div className="flex contents-center lg:flex-row">
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-white">Raichu</p>
-                                    <p className="font-[Orbitron-Bold] text-[1.875rem] text-center text-[#A4ACAF]">#26</p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
+
                     </div>
                     <div className="grid justify-center">
                         <button id="randomPokemonTwo"
@@ -148,7 +331,7 @@ const PokedexPageComponent = () => {
                 </div>
             </div>
 
-            <div id="pokemonColorBack" className="col-span-12 lg:col-span-5 order-1 lg:order-2 bg-[#F8D030] max-h-full">
+            <div id="pokemonColorBack" className="col-span-12 lg:col-span-5 order-1 lg:order-2 max-h-full" style={{ background: pokemonColorBack }}>
                 <p
                     className="block lg:hidden font-[Orbitron-Bold] text-[3.125rem] text-center md:text-[6.25rem] lg:text-[6.25rem] pt-[1.875rem]">
                     <span className="text-[#FF0000] textStroke">Poke</span><span className="text-white textStroke">Dex</span>
@@ -157,38 +340,39 @@ const PokedexPageComponent = () => {
 
                     <input type="text" id="userSearchInput"
                         className="font-[Orbitron-Bold] text-[1.25rem] min-h-[63px]  md:text-[1.875rem] text-black rounded-[10px] w-full mx-[3.5625rem] lg:mx-[6.875rem]"
-                        placeholder="Search Name or ID" onKeyDown={(e: React.KeyboardEvent<HTMLInputElement> |  React.ChangeEvent<HTMLInputElement>) => { 
-                                if((e as React.KeyboardEvent<HTMLInputElement>).key === "Enter"){
-                                    setUserInput((e as React.ChangeEvent<HTMLInputElement>).target.value);
-                                }
-                         }} />
+                        placeholder="Search Name or ID" onKeyDown={(e: React.KeyboardEvent<HTMLInputElement> | React.ChangeEvent<HTMLInputElement>) => {
+                            if ((e as React.KeyboardEvent<HTMLInputElement>).key === "Enter") {
+                                setUserInput((e as React.ChangeEvent<HTMLInputElement>).target.value);
+                            }
+                        }} />
                 </div>
                 <div className="flex justify-center items-center mt-[23px]">
                     <img src={pokeballIcon} className="mx-2 h-[50px] w-[50px] md:h-[70px] md:w-[70px]" alt="Pokeball Icon" />
                     <p id="pokemonId" className="mx-2 font-[Orbitron-Bold] text-[1.875rem] md:text-[3.125rem]">{pokemon && pokemon.id ? `#${pokemon.id}` : "Loading"}</p>
-                    <img id="pokemonFavorite" src={unFavHeart} className="mx-2 h-[40px] w-[40px] cursor-pointer" alt="UnFav Heart" />
+                    <img id="pokemonFavorite" src={favorite} className="mx-2 h-[40px] w-[40px] cursor-pointer" alt="UnFav Heart"
+                        onClick={handleFavoriteClick} />
                 </div>
                 <div className="flex justify-center">
                     <p id="pokemonName"
                         className="font-[Orbitron-Bold] text-center text-[1.875rem] md:text-[3.125rem] mt-[17px]">{pokemon && pokemon ? CapitalFirstLetter(pokemon.name) : "loading"}</p>
                 </div>
                 <div className="flex justify-center">
-                    <p className="font-[Orbitron-Bold] text-[1.25rem] p-0 m-0" onClick={handleShinyClick}>Click Picture for Shiny</p>
+                    <p className="font-[Orbitron-Bold] text-[1.25rem] p-0 m-0">Click Picture for Shiny</p>
                 </div>
                 <div className="flex justify-center drop-shadow-lg">
-                    <img id="pokemonImg" src={pokemon?.sprites.other?.['official-artwork'].front_default}
+                    <img id="pokemonImg" src={imgSrc || pokemon?.sprites.other?.['official-artwork'].front_default} onClick={handleShinyClick}
                         className="h-[250px] w-[250px] md:h-[500px] md:w-[500px] mx-5 cursorImg bg-white rounded-[500px] mt-[5px]"
                         alt="Pokemon Image" />
                 </div>
                 <div className="flex justify-center">
-                    <p id="elementType" className="font-[Orbitron-Bold] text-[1.875rem] md:text-[3.125rem] mt-[30px]">Type: {' '}
-                        {pokemon ? pokemon.types.map((type: any, index: number) => (
+                    <p id="elementType" className="font-[Orbitron-Bold] text-[1.875rem] md:text-[3.125rem] mt-[30px] text-center">Type: {' '}
+                        {pokemon ? pokemon.types.map((type: { type: { name: string } }, index: number) => (
                             <span key={index}>
                                 {CapitalFirstLetter(`${type.type.name}`)}
                                 {index !== pokemon.types.length - 1 && ', '}
                             </span>
-                        )) 
-                        : "N/A"}
+                        ))
+                            : "N/A"}
                     </p>
                 </div>
                 <div className="flex justify-center mt-[30px]">
@@ -211,9 +395,10 @@ const PokedexPageComponent = () => {
                             className="text-white bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-6 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <svg aria-hidden="true" className="w-[50px] h-[50px] grid" fill="currentColor" viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
+                                <path fillRule="evenodd"
                                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
+                                    // eslint-disable-next-line react/no-unknown-property
+                                    clipRule="evenodd"></path>
                             </svg>
                             <span className="sr-only">Close menu</span>
                         </button>
