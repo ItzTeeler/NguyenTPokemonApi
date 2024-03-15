@@ -21,8 +21,11 @@ const PokedexPageComponent = () => {
     const [pokemonEvoData, setPokeEvoData] = useState<any[]>([]);
     const [evolutionDatas, setEvolutionData] = useState<any[]>([]);
     const [favorite, setFavorite] = useState<string>(unFavHeart);
+    const [favorites, setFavorites] = useState<Pokemon[]>([]);
+    const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
+    const [modalBlock, setModalBlock] = useState<string>("hidden");
     useEffect(() => {
-
+    
         const getData = async () => {
             const favorites = getLocalStorage();
             const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
@@ -62,10 +65,12 @@ const PokedexPageComponent = () => {
             setPokeEvoData(pokemonEvolutionChain);
             console.log(pokemonEvolutionChain);
         };
-
+        const favoritesData = getLocalStorage();
+        setFavorites(favoritesData);
+        console.log(favorites)
         getData();
 
-    }, [userInput]);
+    }, [userInput, favorite]);
 
     const fetchEvolutionData = useCallback(async () => {
         const promise = pokemonEvoData.map(async (evolutionName: any) => {
@@ -100,7 +105,21 @@ const PokedexPageComponent = () => {
         setImgSrc("");
     }
 
+    const handleFavDrawerClick = () => {
+        if (favClassName !== "-translate-x-full") {
+            setFavClassName("-translate-x-full");
+        } else {
+            setFavClassName("");
+        }
+    }
 
+    const showHideModal = ()=>{
+        if(modalBlock !== "hidden"){
+            setModalBlock("hidden")
+        }else{
+            setModalBlock("block")
+        }
+    }
     const CapitalFirstLetter = (userInput: string) => {
         if (!userInput) return "";
 
@@ -204,14 +223,14 @@ const PokedexPageComponent = () => {
         return JSON.parse(localStorageData);
     }
 
-    // Inside PokedexPageComponent component
     const handleFavoriteClick = () => {
         const pokemonName = pokemon?.name;
         if (pokemonName) {
             const favorites = getLocalStorage();
             const isAlreadyFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === pokemonName);
             if (isAlreadyFavorite) {
-                setFavorite(unFavHeart)
+                setModalBlock("hidden");
+                setFavorite(unFavHeart);
                 removeLocalStorage(pokemon);
             } else {
                 setFavorite(FavHeart)
@@ -378,45 +397,76 @@ const PokedexPageComponent = () => {
                 <div className="flex justify-center mt-[30px]">
 
                     <div className="text-center mb-[40px]">
+
                         <button id="getFavoriteBtn"
                             className="text-white text-[Orbitron-Bold] bg-[#FF1C1C] hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-[10px] text-[1.875rem] lg:text-[3.125rem] px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                             type="button" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation"
-                            aria-controls="drawer-navigation">
+                            aria-controls="drawer-navigation" onClick={handleFavDrawerClick}>
                             Open Favorite
                         </button>
                     </div>
 
-                    <div id="drawer-navigation"
-                        className="fixed top-0 bg-[#A4ACAF] left-0 z-40 w-full lg:w-[420px] h-screen p-4 overflow-y-auto transition-transform -translate-x-full dark:bg-gray-800"
-                        aria-labelledby="drawer-navigation-label">
+                    <div
+                        id="drawer-navigation"
+                        className={`fixed top-0 bg-[#A4ACAF] left-0 z-40 w-full lg:w-[420px] h-screen p-4 overflow-y-auto transition-transform dark:bg-gray-800 ${favClassName}`}
+                        aria-labelledby="drawer-navigation-label"
+                    >
                         <p id="drawer-navigation-label" className="text-white font-[Orbitron-Bold] text-[2.8rem] uppercase">
-                            Favorite</p>
-                        <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
-                            className="text-white bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-6 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                            <svg aria-hidden="true" className="w-[50px] h-[50px] grid" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fillRule="evenodd"
+                            Favorite
+                        </p>
+                        <button onClick={handleFavDrawerClick}
+                            type="button"
+                            data-drawer-hide="drawer-navigation"
+                            aria-controls="drawer-navigation"
+                            className="text-white bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-6 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                className="w-[50px] h-[50px] grid"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    fillRule="evenodd"
                                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    // eslint-disable-next-line react/no-unknown-property
-                                    clipRule="evenodd"></path>
+                                    clipRule="evenodd"
+                                ></path>
                             </svg>
                             <span className="sr-only">Close menu</span>
                         </button>
                         <div className="py-4 overflow-y-auto ">
                             <div id="getFavoritesDiv">
+                                {favorites.map((pokemonName: any, index: number) => (
+                                    <div key={index} className="flex justify-between flex-row">
+                                        <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => setUserInput(pokemonName.name)}>
+                                            <span>{`#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
+                                        </p>
+                                        <button className="text-white bg-[#FF1C1C] hover:bg-gray-200 hover:text-gray-900 rounded-r-lg px-5 favoriteSpacing dark:hover:bg-gray-600 dark:hover:text-white h-full" onClick={showHideModal}>
+                                            {"X"}
+                                        </button>
+                                    </div>
+                                ))}
+
+
                             </div>
                         </div>
 
-                        <div id="conModal" className="modalBox">
+                        <div id="conModal" className={`modalBox ${modalBlock}`}>
                             <div className="modalText">
                                 <p>Are you sure you want to remove this Pokemon from favorites?</p>
                                 <div className="modal-buttons">
-                                    <button id="confirmBtn" className="greenBtn">Confirm</button>
-                                    <button id="cancelBtn" className="redBtn">Cancel</button>
+                                    <button id="confirmBtn" className="greenBtn" onClick={handleFavoriteClick}>
+                                        Confirm
+                                    </button>
+                                    <button id="cancelBtn" className="redBtn" onClick={showHideModal}>
+                                        Cancel
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
                 </div>
             </div>
