@@ -1,8 +1,8 @@
 Name - Tyler Nguyen
 Date - 03-15-2024
 Lab Name - Pokemon Api React Rebuild
-Peer Reviewer -
-Peer Review - 
+Peer Reviewer - Aidan Younathan
+Peer Review - The site works good and I like the color change aspect, Good job!
 
 # Getting Started with Create React App
 
