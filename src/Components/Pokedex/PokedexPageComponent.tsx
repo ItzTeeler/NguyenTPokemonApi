@@ -87,6 +87,11 @@ const PokedexPageComponent = () => {
         fetchEvolutionData();
     }, [fetchEvolutionData]);
 
+    useEffect(()=>{
+        const favoritesData = getLocalStorage();
+    setFavorites(favoritesData);
+    },[])
+
     const handleShinyClick = () => {
         const shinyPic = pokemon?.sprites.other?.['official-artwork'].front_shiny;
         const defaultPic = pokemon?.sprites.other?.['official-artwork'].front_default;
