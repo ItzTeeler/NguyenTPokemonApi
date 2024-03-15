@@ -17,15 +17,14 @@ const PokedexPageComponent = () => {
     const [movesColor, setMoveColor] = useState<string>("#F8D030");
     const [evolutionColor, setEvolutionColor] = useState<string>("#F8D030");
     const [pokemonColorBack, setPokemonColorBack] = useState<string>("#F8D030");
-    const [pokemonEvolution, setPokemonEvolution] = useState<any>({});
-    const [pokemonEvoData, setPokeEvoData] = useState<any[]>([]);
-    const [evolutionDatas, setEvolutionData] = useState<any[]>([]);
+    const [pokemonEvolution, setPokemonEvolution] = useState<RegEvolution | null>(null);
+    const [pokemonEvoData, setPokeEvoData] = useState<string[]>([]);
+    const [evolutionDatas, setEvolutionData] = useState<{ evolutionImage: string, evolutionId: string }[]>([])
     const [favorite, setFavorite] = useState<string>(unFavHeart);
     const [favorites, setFavorites] = useState<Pokemon[]>([]);
     const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
     const [modalBlock, setModalBlock] = useState<string>("hidden");
     useEffect(() => {
-    
         const getData = async () => {
             const favorites = getLocalStorage();
             const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
@@ -73,15 +72,15 @@ const PokedexPageComponent = () => {
     }, [userInput, favorite]);
 
     const fetchEvolutionData = useCallback(async () => {
-        const promise = pokemonEvoData.map(async (evolutionName: any) => {
+        const promise = pokemonEvoData.map(async (evolutionName: string) => {
             const evolutionImage = await PokemonEvolutionImageName(evolutionName);
             const evolutionId = await PokemonEvolutionId(evolutionName);
-            return { evolutionImage, evolutionId };
+            return { evolutionImage, evolutionId: String(evolutionId) };
         });
         const dataEvo = await Promise.all(promise);
-
         setEvolutionData(dataEvo);
     }, [pokemonEvoData]);
+    
 
     useEffect(() => {
         fetchEvolutionData();
@@ -90,6 +89,7 @@ const PokedexPageComponent = () => {
     useEffect(()=>{
         const favoritesData = getLocalStorage();
     setFavorites(favoritesData);
+    console.log(evolutionDatas);
     },[])
 
     const handleShinyClick = () => {
@@ -104,11 +104,13 @@ const PokedexPageComponent = () => {
     };
 
 
-    const genRandomNumber = () => {
+    const genRandomNumber = async () => {
         const randomId: string = String(Math.floor(Math.random() * 898) + 1);
-        setUserInput(randomId);
+        const getName: Pokemon = await pokeData(randomId);
+        setUserInput(getName.name);
         setImgSrc("");
     }
+    
 
     const handleFavDrawerClick = () => {
         if (favClassName !== "-translate-x-full") {
@@ -243,6 +245,7 @@ const PokedexPageComponent = () => {
             }
         }
     };
+    
 
 
     const saveToLocalStorage = (pokemon: Pokemon | null) => {
@@ -442,7 +445,7 @@ const PokedexPageComponent = () => {
                         </button>
                         <div className="py-4 overflow-y-auto ">
                             <div id="getFavoritesDiv">
-                                {favorites.map((pokemonName: any, index: number) => (
+                                {favorites.map((pokemonName: Pokemon, index: number) => (
                                     <div key={index} className="flex justify-between flex-row">
                                         <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => setUserInput(pokemonName.name)}>
                                             <span>{`#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
