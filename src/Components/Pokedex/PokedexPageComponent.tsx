@@ -24,6 +24,7 @@ const PokedexPageComponent = () => {
     const [favorites, setFavorites] = useState<Pokemon[]>([]);
     const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
     const [modalBlock, setModalBlock] = useState<string>("hidden");
+    
     useEffect(() => {
         const getData = async () => {
             const favorites = getLocalStorage();
@@ -41,10 +42,10 @@ const PokedexPageComponent = () => {
 
             const evolutionData = await pokeDataEvo(userInput);
             const evoData: Evolution = evolutionData;
-
+            console.log(evoData.evolution_chain.url);
             const evoTypeData = await getAPI(evoData.evolution_chain.url);
             const evoType: any | RegEvolution = evoTypeData;
-
+            console.log(evoType);
             setPokemonEvolution(evoType);
             setEvoData(evoData);
             setLocation(locData);
