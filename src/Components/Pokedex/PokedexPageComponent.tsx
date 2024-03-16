@@ -476,8 +476,10 @@ const PokedexPageComponent = () => {
                                         <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => {
                                             if (typeof pokemonName === 'string') {
                                                 setUserInput(pokemonName);
+                                                setImgSrc("");
                                             } else {
                                                 setUserInput(pokemonName.name);
+                                                setImgSrc("");
                                             }
                                         }}>
                                             <span>{typeof pokemonName === 'string' ? pokemonName : `#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
