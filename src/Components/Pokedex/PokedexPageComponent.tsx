@@ -21,14 +21,15 @@ const PokedexPageComponent = () => {
     const [pokemonEvoData, setPokeEvoData] = useState<string[]>([]);
     const [evolutionDatas, setEvolutionData] = useState<{ evolutionImage: string, evolutionId: string }[]>([])
     const [favorite, setFavorite] = useState<string>(unFavHeart);
-    const [favorites, setFavorites] = useState<Pokemon[]>([]);
+    const [favorites, setFavorites] = useState<Pokemon[]|string[]>([]);
     const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
     const [modalBlock, setModalBlock] = useState<string>("hidden");
+    const [toggleBool, setBool] = useState<boolean>(false)
 
     useEffect(() => {
         const getData = async () => {
             const favorites = getLocalStorage();
-            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
+            const isFavorite = favorites.some((favPokemon: Pokemon | string | any) => favPokemon.name === userInput);
             if (isFavorite) {
                 setFavorite(FavHeart);
             } else {
@@ -70,7 +71,7 @@ const PokedexPageComponent = () => {
         console.log(favorites)
         getData();
 
-    }, [userInput, favorite]);
+    }, [userInput, favorite, toggleBool]);
 
     const fetchEvolutionData = useCallback(async () => {
         const promise = pokemonEvoData.map(async (evolutionName: string) => {
@@ -80,7 +81,7 @@ const PokedexPageComponent = () => {
         });
         const dataEvo = await Promise.all(promise);
         setEvolutionData(dataEvo);
-    }, [pokemonEvoData]);
+    }, [pokemonEvoData,]);
 
 
     useEffect(() => {
@@ -90,7 +91,6 @@ const PokedexPageComponent = () => {
     useEffect(() => {
         const favoritesData = getLocalStorage();
         setFavorites(favoritesData);
-        console.log(evolutionDatas);
     }, [])
 
     const handleShinyClick = () => {
@@ -137,6 +137,7 @@ const PokedexPageComponent = () => {
 
         return formattedInput;
     }
+    
 
     const BackgroundColor = (color: string) => {
         switch (color) {
@@ -233,50 +234,58 @@ const PokedexPageComponent = () => {
 
     const handleFavoriteClick = () => {
         const pokemonName = pokemon?.name;
-        if (pokemonName) {
+        const pokemonId = String(pokemon?.id)
+        if (pokemonName && pokemonId) {
             const favorites = getLocalStorage();
-            const isAlreadyFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === pokemonName);
+            const isAlreadyFavorite = favorites.some((fav: { name: string, id: string }) => fav.name === pokemonName && fav.id === pokemonId);
             if (isAlreadyFavorite) {
                 setModalBlock("hidden");
                 setFavorite(unFavHeart);
-                removeLocalStorage(pokemon);
+                removeLocalStorage(pokemonName);
             } else {
-                setFavorite(FavHeart)
-                saveToLocalStorage(pokemon);
+                setFavorite(FavHeart);
+                saveToLocalStorage(pokemonName, pokemonId);
             }
         }
     };
-
-
-
-    const saveToLocalStorage = (pokemon: Pokemon | null) => {
+    
+    const saveToLocalStorage = (pokemonName: string, pokemonId: string) => {
         let favorites = getLocalStorage();
-        if (pokemon && !favorites.includes(pokemon)) {
-            favorites.push(pokemon);
+        if (!favorites.some((fav: { name: string, id: string }) => fav.name === pokemonName && fav.id === pokemonId)) {
+            favorites.push({ name: pokemonName, id: pokemonId });
             localStorage.setItem("Favorites", JSON.stringify(favorites));
         }
     };
+    
+    
 
-    const removeLocalStorage = (pokemon: Pokemon | null) => {
+    const removeLocalStorage = (pokemon: Pokemon | string) => {
         let favorites = getLocalStorage();
-        if (pokemon) {
-            const pokemonName = pokemon.name;
-            const namedIndex = favorites.findIndex((favPokemon: Pokemon) => favPokemon.name === pokemonName);
-            if (namedIndex !== -1) {
-                favorites.splice(namedIndex, 1);
-                localStorage.setItem("Favorites", JSON.stringify(favorites));
+    
+        // Filter out the item to remove based on name and id
+        favorites = favorites.filter((fav: { name: string, id: number }) => {
+            if (typeof pokemon === 'string') {
+                return fav.name !== pokemon;
+            } else {
+                return fav.name !== pokemon.name || fav.id !== pokemon.id;
             }
-        }
-    };
+        });
+    
+        localStorage.setItem("Favorites", JSON.stringify(favorites));
+    }
+    
 
 
     const handleRemoveFromFavorites = async (fav: any) => {
-        await setUserInput(fav);
-        setModalBlock("block");
-        if (userInput === fav) {
-            handleFavoriteClick();
+        if(toggleBool){
+            removeLocalStorage(fav);
+            setBool(false);
+        } else {
+            removeLocalStorage(fav);
+            setBool(true);
         }
     }
+    
 
 
 
@@ -456,7 +465,7 @@ const PokedexPageComponent = () => {
                         </button>
                         <div className="py-4 overflow-y-auto ">
                             <div id="getFavoritesDiv">
-                                {favorites.map((pokemonName: Pokemon, index: number) => (
+                                {favorites.map((pokemonName: Pokemon | any, index: number) => (
                                     <div key={index} className="flex justify-between flex-row">
                                         <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => setUserInput(pokemonName.name)}>
                                             <span>{`#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
@@ -468,7 +477,7 @@ const PokedexPageComponent = () => {
 
                                     </div>
                                 ))}
-                                <div id="conModal" className={`modalBox ${modalBlock}`}>
+                                {/* <div id="conModal" className={`modalBox ${modalBlock}`}>
                                     <div className="modalText">
                                         <p>Are you sure you want to remove this Pokemon from favorites?</p>
                                         <div className="modal-buttons">
@@ -481,7 +490,7 @@ const PokedexPageComponent = () => {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
 
                             </div>
                         </div>
