@@ -24,9 +24,16 @@ const PokedexPageComponent = () => {
     const [favorites, setFavorites] = useState<Pokemon[]>([]);
     const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
     const [modalBlock, setModalBlock] = useState<string>("hidden");
-    
+
     useEffect(() => {
         const getData = async () => {
+            const favorites = getLocalStorage();
+            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput);
+            if (isFavorite) {
+                setFavorite(FavHeart);
+            } else {
+                setFavorite(unFavHeart);
+            }
             const pokemonData = await pokeData(userInput);
             const data: Pokemon = pokemonData;
 
@@ -37,25 +44,18 @@ const PokedexPageComponent = () => {
             const evoData: Evolution = evolutionData;
             console.log(evoData.evolution_chain.url);
             const evoTypeData = await getAPI(evoData.evolution_chain.url);
-            const evoType: {evolution_chain:{chain:{species:{name:string}; evolves_to:{species:{name:string}[]}[]}}}| any | RegEvolution = evoTypeData;
+            const evoType: { evolution_chain: { chain: { species: { name: string }; evolves_to: { species: { name: string }[] }[] } } } | any | RegEvolution = evoTypeData;
             console.log(evoType);
             setPokemonEvolution(evoType);
             setEvoData(evoData);
             setLocation(locData);
             setPokemon(data);
             BackgroundColor(evoData.color.name);
-            
-            const favorites = getLocalStorage();
-            const isFavorite = favorites.some((favPokemon: Pokemon) => favPokemon.name === userInput || String(favPokemon.id) === userInput);
-            if (isFavorite) {
-                setFavorite(FavHeart);
-            } else {
-                setFavorite(unFavHeart);
-            }
+
             const pokemonEvolutionChain: string[] = [];
             if (evoType && evoType.chain) {
                 pokemonEvolutionChain.push(evoType.chain.species.name);
-                evoType.chain.evolves_to.forEach((e: {species:{name:string;}; evolves_to: string[];}) => {
+                evoType.chain.evolves_to.forEach((e: { species: { name: string; }; evolves_to: string[]; }) => {
                     e.species && pokemonEvolutionChain.push(e.species.name);
                     e.evolves_to.forEach((e: any) => {
                         e.species && pokemonEvolutionChain.push(e.species.name);
@@ -81,17 +81,17 @@ const PokedexPageComponent = () => {
         const dataEvo = await Promise.all(promise);
         setEvolutionData(dataEvo);
     }, [pokemonEvoData]);
-    
+
 
     useEffect(() => {
         fetchEvolutionData();
     }, [fetchEvolutionData]);
 
-    useEffect(()=>{
+    useEffect(() => {
         const favoritesData = getLocalStorage();
-    setFavorites(favoritesData);
-    console.log(evolutionDatas);
-    },[])
+        setFavorites(favoritesData);
+        console.log(evolutionDatas);
+    }, [])
 
     const handleShinyClick = () => {
         const shinyPic = pokemon?.sprites.other?.['official-artwork'].front_shiny;
@@ -111,7 +111,7 @@ const PokedexPageComponent = () => {
         setUserInput(getName.name);
         setImgSrc("");
     }
-    
+
 
     const handleFavDrawerClick = () => {
         if (favClassName !== "-translate-x-full") {
@@ -121,10 +121,10 @@ const PokedexPageComponent = () => {
         }
     }
 
-    const showHideModal = ()=>{
-        if(modalBlock !== "hidden"){
+    const showHideModal = () => {
+        if (modalBlock !== "hidden") {
             setModalBlock("hidden")
-        }else{
+        } else {
             setModalBlock("block")
         }
     }
@@ -246,7 +246,7 @@ const PokedexPageComponent = () => {
             }
         }
     };
-    
+
 
 
     const saveToLocalStorage = (pokemon: Pokemon | null) => {
@@ -268,6 +268,16 @@ const PokedexPageComponent = () => {
             }
         }
     };
+
+
+    const handleRemoveFromFavorites = async (fav: any) => {
+        await setUserInput(fav);
+        setModalBlock("block");
+        if (userInput === fav) {
+            handleFavoriteClick();
+        }
+    }
+
 
 
     return (
@@ -451,27 +461,28 @@ const PokedexPageComponent = () => {
                                         <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => setUserInput(pokemonName.name)}>
                                             <span>{`#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
                                         </p>
-                                        <button className="text-white bg-[#FF1C1C] hover:bg-gray-200 hover:text-gray-900 rounded-r-lg px-5 favoriteSpacing dark:hover:bg-gray-600 dark:hover:text-white h-full" onClick={showHideModal}>
+                                        <button className="text-white bg-[#FF1C1C] hover:bg-gray-200 hover:text-gray-900 rounded-r-lg px-5 favoriteSpacing dark:hover:bg-gray-600 dark:hover:text-white h-full" onClick={() => { handleRemoveFromFavorites(pokemonName.name) }}>
                                             {"X"}
                                         </button>
+
+
                                     </div>
                                 ))}
+                                <div id="conModal" className={`modalBox ${modalBlock}`}>
+                                    <div className="modalText">
+                                        <p>Are you sure you want to remove this Pokemon from favorites?</p>
+                                        <div className="modal-buttons">
+                                            <button id="confirmBtn" className="greenBtn" onClick={() => { handleRemoveFromFavorites(pokemon?.name) }}>
 
-
-                            </div>
-                        </div>
-
-                        <div id="conModal" className={`modalBox ${modalBlock}`}>
-                            <div className="modalText">
-                                <p>Are you sure you want to remove this Pokemon from favorites?</p>
-                                <div className="modal-buttons">
-                                    <button id="confirmBtn" className="greenBtn" onClick={handleFavoriteClick}>
-                                        Confirm
-                                    </button>
-                                    <button id="cancelBtn" className="redBtn" onClick={showHideModal}>
-                                        Cancel
-                                    </button>
+                                                Confirm
+                                            </button>
+                                            <button id="cancelBtn" className="redBtn" onClick={showHideModal}>
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
