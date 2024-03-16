@@ -27,6 +27,7 @@ const PokedexPageComponent = () => {
     const [toggleBool, setBool] = useState<boolean>(false)
 
     useEffect(() => {
+        setImgSrc("");
         const getData = async () => {
             const favorites: (Pokemon | string)[] = getLocalStorage();
             const pokemonData = await pokeData(userInput);
