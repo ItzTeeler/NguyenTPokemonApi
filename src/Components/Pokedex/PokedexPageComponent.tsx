@@ -21,20 +21,14 @@ const PokedexPageComponent = () => {
     const [pokemonEvoData, setPokeEvoData] = useState<string[]>([]);
     const [evolutionDatas, setEvolutionData] = useState<{ evolutionImage: string, evolutionId: string }[]>([])
     const [favorite, setFavorite] = useState<string>(unFavHeart);
-    const [favorites, setFavorites] = useState<Pokemon[]|string[]>([]);
+    const [favorites, setFavorites] = useState<Pokemon[] | string[]>([]);
     const [favClassName, setFavClassName] = useState<string>("-translate-x-full");
     const [modalBlock, setModalBlock] = useState<string>("hidden");
     const [toggleBool, setBool] = useState<boolean>(false)
 
     useEffect(() => {
         const getData = async () => {
-            const favorites = getLocalStorage();
-            const isFavorite = favorites.some((favPokemon: Pokemon | string | any) => favPokemon.name === userInput);
-            if (isFavorite) {
-                setFavorite(FavHeart);
-            } else {
-                setFavorite(unFavHeart);
-            }
+            const favorites: (Pokemon | string)[] = getLocalStorage();
             const pokemonData = await pokeData(userInput);
             const data: Pokemon = pokemonData;
 
@@ -52,6 +46,19 @@ const PokedexPageComponent = () => {
             setLocation(locData);
             setPokemon(data);
             BackgroundColor(evoData.color.name);
+
+            const isFavorite = favorites.some((favPokemon: Pokemon | string) => {
+                if (typeof favPokemon === 'string') {
+                    return favPokemon === userInput;
+                } else {
+                    return favPokemon.name === userInput;
+                }
+            });
+            if (isFavorite) {
+                setFavorite(FavHeart);
+            } else {
+                setFavorite(unFavHeart);
+            }
 
             const pokemonEvolutionChain: string[] = [];
             if (evoType && evoType.chain) {
@@ -137,7 +144,7 @@ const PokedexPageComponent = () => {
 
         return formattedInput;
     }
-    
+
 
     const BackgroundColor = (color: string) => {
         switch (color) {
@@ -248,7 +255,7 @@ const PokedexPageComponent = () => {
             }
         }
     };
-    
+
     const saveToLocalStorage = (pokemonName: string, pokemonId: string) => {
         let favorites = getLocalStorage();
         if (!favorites.some((fav: { name: string, id: string }) => fav.name === pokemonName && fav.id === pokemonId)) {
@@ -256,13 +263,12 @@ const PokedexPageComponent = () => {
             localStorage.setItem("Favorites", JSON.stringify(favorites));
         }
     };
-    
-    
+
+
 
     const removeLocalStorage = (pokemon: Pokemon | string) => {
         let favorites = getLocalStorage();
-    
-        // Filter out the item to remove based on name and id
+
         favorites = favorites.filter((fav: { name: string, id: number }) => {
             if (typeof pokemon === 'string') {
                 return fav.name !== pokemon;
@@ -270,14 +276,14 @@ const PokedexPageComponent = () => {
                 return fav.name !== pokemon.name || fav.id !== pokemon.id;
             }
         });
-    
+
         localStorage.setItem("Favorites", JSON.stringify(favorites));
     }
-    
 
 
-    const handleRemoveFromFavorites = async (fav: any) => {
-        if(toggleBool){
+
+    const handleRemoveFromFavorites = async (fav: Pokemon | string) => {
+        if (toggleBool) {
             removeLocalStorage(fav);
             setBool(false);
         } else {
@@ -285,7 +291,7 @@ const PokedexPageComponent = () => {
             setBool(true);
         }
     }
-    
+
 
 
 
@@ -465,18 +471,23 @@ const PokedexPageComponent = () => {
                         </button>
                         <div className="py-4 overflow-y-auto ">
                             <div id="getFavoritesDiv">
-                                {favorites.map((pokemonName: Pokemon | any, index: number) => (
+                                {favorites.map((pokemonName: string | Pokemon, index: number) => (
                                     <div key={index} className="flex justify-between flex-row">
-                                        <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => setUserInput(pokemonName.name)}>
-                                            <span>{`#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
+                                        <p className="font-[Orbitron-Bold] text-black dark:text-white bg-white w-full rounded-l-lg px-2 favoriteSpacing cursor-pointer" onClick={() => {
+                                            if (typeof pokemonName === 'string') {
+                                                setUserInput(pokemonName);
+                                            } else {
+                                                setUserInput(pokemonName.name);
+                                            }
+                                        }}>
+                                            <span>{typeof pokemonName === 'string' ? pokemonName : `#${pokemonName.id} ${CapitalFirstLetter(pokemonName.name)}`}</span>
                                         </p>
-                                        <button className="text-white bg-[#FF1C1C] hover:bg-gray-200 hover:text-gray-900 rounded-r-lg px-5 favoriteSpacing dark:hover:bg-gray-600 dark:hover:text-white h-full" onClick={() => { handleRemoveFromFavorites(pokemonName.name) }}>
+                                        <button className="text-white bg-[#FF1C1C] hover:bg-gray-200 hover:text-gray-900 rounded-r-lg px-5 favoriteSpacing dark:hover:bg-gray-600 dark:hover:text-white h-full" onClick={() => { handleRemoveFromFavorites(pokemonName) }}>
                                             {"X"}
                                         </button>
-
-
                                     </div>
                                 ))}
+
                                 {/* <div id="conModal" className={`modalBox ${modalBlock}`}>
                                     <div className="modalText">
                                         <p>Are you sure you want to remove this Pokemon from favorites?</p>
