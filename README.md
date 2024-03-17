@@ -1,6 +1,7 @@
 Name - Tyler Nguyen
 Date - 03-16-2024
 Lab Name - Pokemon Api React Rebuild
+Description - This is a recreation of my Pokemon API that was built in tailwindCSS and Javascript. I recreated it in React with TailwindCss
 Peer Reviewer - Aidan Younathan
 Peer Review - The site works good and I like the color change aspect, Good job!
 
